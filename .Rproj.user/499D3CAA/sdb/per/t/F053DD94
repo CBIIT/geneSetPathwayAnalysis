@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "#--------------------------------------------------------------------------------------------------\n# UPDATE GENE (SHORT) ANNOTATIONS TO USE DTB GENE LIST MEMBERSHIP WHERE POSSIBLE\n#--------------------------------------------------------------------------------------------------\ngeneAnnotTab <- geneSetPathwayAnalysis::geneAnnotTab\ngeneSets <- geneSetPathwayAnalysis::geneSets\n\ndtbGenes <- geneSets[[\"All Gene Sets\"]]\ndtbGenesToAdd <- setdiff(dtbGenes, rownames(geneAnnotTab))\nif (length(dtbGenesToAdd) > 0){\n  tmp <- data.frame(GENE_NAME = dtbGenesToAdd, ANNOT = NA, SHORT_ANNOT = NA,\n                    stringsAsFactors = FALSE)\n  rownames(tmp) <- tmp$GENE_NAME\n  stopifnot(identical(colnames(tmp), colnames(geneAnnotTab)))\n  geneAnnotTab <- rbind(geneAnnotTab, tmp)\n  geneAnnotTab <- geneAnnotTab[order(geneAnnotTab$GENE_NAME), ]\n\n  stopifnot(all(!duplicated(rownames(geneAnnotTab))))\n  stopifnot(all(dtbGenes %in% rownames(geneAnnotTab)))\n}\n\ngeneSets[[\"All Gene Sets\"]] <- NULL\ntmp <- names(geneSets)\ntmp[which(tmp == \"DDR\")] <- \"DNA Damage Response (DDR)\"\nnames(geneSets) <- tmp\n\ngetDtbAnnot <- function(gene){\n  annotStr <- \"\"\n  tmp <- vapply(geneSets, function(x){ gene %in% x}, logical(1))\n  if (any(tmp)){\n    tmp <- tmp[tmp]\n    annotStr <- paste0(names(tmp), collapse = \"; \")\n  }\n  return(annotStr)\n}\n\n# If gene is in one or more DTB gene lists, annotate based on these.\n# Otherwise retain CellMiner annotation strings.\nfor (gene in rownames(geneAnnotTab)){\n  annotStr <- getDtbAnnot(gene)\n  if (annotStr != \"\"){\n    geneAnnotTab[gene, \"SHORT_ANNOT\"] <- annotStr\n  }\n}\n\nsave(geneAnnotTab, file = \"data/geneAnnotTab.RData\")\n#--------------------------------------------------------------------------------------------------\n",
+    "created" : 1487017503391.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3675823288",
+    "id" : "F053DD94",
+    "lastKnownWriteTime" : 1490194244,
+    "last_content_update" : 1490194244,
+    "path" : "~/lmpNci/geneSetPathwayAnalysis/inst/extdata/updateGeneAnnotTab.R",
+    "project_path" : "inst/extdata/updateGeneAnnotTab.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,268 @@
+---
+title: "clusterProfiler Test"
+output:
+  md_document:
+    variant: markdown_github
+  html_notebook:
+    toc: yes
+---
+  
+## Purpose
+
+Test out clusterProfiler
+
+## Load libraries
+```{r}
+# Bioconductor
+library(clusterProfiler)
+library(paxtoolsr)
+
+# CRAN
+library(wordcloud)
+library(tm)
+library(igraph)
+library(magrittr)
+library(dplyr)
+
+# Other 
+library(geneSetPathwayAnalysis)
+```
+
+## Load Gene Sets
+### Bader EnrichmentMap
+```{r}
+lowerBound <- 3
+upperBound <- 100
+
+lovGmt <- readGmt("Human_GOBP_AllPathways_no_GO_iea_February_01_2017_symbol.gmt")
+xCnts <- unlist(lapply(lovGmt, length))
+idx <- which(xCnts > lowerBound & xCnts < upperBound)
+which.max(xCnts[idx])
+length(lovGmt[[1435]])
+
+orgNames <- names(lovGmt)
+
+smNames <- NULL 
+for(i in 1:length(lovGmt)) {
+  t1 <- names(lovGmt)[i]
+  t2 <- strsplit(t1, "%")
+  smNames <- c(smNames, t2[[1]][1])
+}
+```
+
+```{r loadGeneSets, eval=FALSE}
+pc <- lovGmt[idx]
+emGmt <- data.frame(ont=character(0), gene=character(0), db=character(0), id=character(0))
+
+maxValue <- length(pc)
+pb <- txtProgressBar(min=1, max=maxValue, style=3)
+
+for(i in 1:length(names(pc))) {
+  setTxtProgressBar(pb, i)
+  
+  t1 <- names(pc)[i]
+  t2 <- strsplit(t1, "%")
+  ont <- t2[[1]][1]
+  db <- t2[[1]][2]
+  id <- t2[[1]][3]
+  
+  emGmt <- rbind(emGmt, data.frame(ont=ont, gene=pc[[i]], db=db, id=id))  
+}
+
+saveRDS(emGmt, "emGmt.rds")
+
+# gmt <- read.gmt("Human_GOBP_AllPathways_no_GO_iea_February_01_2017_symbol.gmt")
+# gmt$ont <- as.character(gmt$ont)
+# g1 <- strsplit(gmt$ont, "%")
+# g2 <- lapply(g1, function(x) {
+#   x[1]
+# })
+# g3 <- gmt
+# g3$ont <- unlist(g2)
+# head(g3)
+# emGmt <- g3
+```
+
+## Load GMT (IMPORTANT)
+```{r}
+emGmt <- readRDS("emGmt.rds")
+
+gmt <- emGmt
+```
+
+## Load Example Data
+```{r}
+genes <- geneSetPathwayAnalysis::geneSets["DDR (HR)"]
+genes <- genes$DDR
+genes <- sample(genes, 15)
+genes
+```
+
+## Run Enrichment Analyses (IMPORTANT)
+NOTE: enricher() comes from clusterProfiler
+
+```{r}
+# Hypergeometric
+egmt <- enricher(genes, TERM2GENE=gmt, qvalueCutoff=0.1)
+head(egmt)
+
+barplot(egmt, showCategory=8)
+dotplot(egmt, showCategory=8)
+g <- enrichMap(egmt, n=10, vertex.label.font=0.001)
+```
+
+## Convert to Cytoscape
+```{r}
+library(jsonlite)
+j1 <- toCytoscape(g)
+write(j1, "enrich_del.json")
+```
+
+## Get communities (modules)
+```{r}
+x <- enrichMap(egmt, n=nrow(egmt), vertex.label.font=0.05)
+ebc <- cluster_edge_betweenness(x)
+ebc <- cluster_fast_greedy(x)
+e1 <- membership(ebc)
+
+e1Df <- data.frame(name=names(e1), module=as.numeric(e1), stringsAsFactors = FALSE)
+
+# Largest module 
+curModule <- as.numeric(names(sort(table(unname(e1)),decreasing=TRUE)[1]))
+curModule <- 3
+
+e2 <- names(which(e1 == curModule))
+
+ebcGenes <- NULL 
+for(i in 1:length(e2)) {
+  pattern <- gsub("([.|()\\^{}+$*?]|\\[|\\])", "\\\\\\1", e2[i])
+  pattern <- paste0("^", pattern, "%")
+
+  # Grab the first geneset if multiple 
+  idx <- which(grepl(pattern, names(lovGmt)))[1]
+  
+  genesInPathway <- genes[genes %in% lovGmt[[idx]]]
+  
+  ebcGenes <- c(ebcGenes, genesInPathway)
+}
+
+sort(table(ebcGenes), decreasing=TRUE) / length(e2)
+#ebcGenes <- unique(ebcGenes)
+
+# Recurrent words in module and frequency
+#wordcloud(corpus, max.words = 25, min.freq=3, random.order = FALSE)
+#tf1
+
+# Genes in module
+ebcGenes
+
+# Get the gene set name that has the most overlap with the user input
+idxM1 <- which(egmt$ID %in% e2)
+idxM2 <- which.max(egmt$Count[idxM1])
+selectedPathway <- egmt$ID[idxM1][idxM2]
+```
+
+## Load Data
+```{r}
+library(data.table)
+library(data.tree)
+
+#source("calcJaccard.R")
+source("/Users/user/Dropbox/drug_target_tmp/pcPathwayOverlap/calcJaccard.R")
+
+# Read Data (has hierarchy?)
+reactomeGmt <- downloadPc2("PathwayCommons.8.reactome.GSEA.hgnc.gmt.gz", version="8", removePrefix=TRUE) # TRUE
+
+pathwayHierarchy <- readRDS("/Users/user/Dropbox/drug_target_tmp/pcPathwayOverlap/reactomePathwayHierarchy.rds")
+
+inputFile <- "/Users/user/Dropbox/drug_target_tmp/pcPathwayOverlap/pathways.txt"
+pathwayInfo <- readPcPathwaysInfo(inputFile)
+```
+
+# data.tree 
+```{r}
+tY <- pathwayHierarchy[complete.cases(pathwayHierarchy),] 
+
+## Get top pathways; those entries that only exist in the first column
+y1 <- sort(unique(tY[!(tY[,1] %in% tY[,2]),1]))
+
+## Convert to data.frame for ease
+setDF(pathwayInfo)
+
+y2 <- cbind(parent="reactome", pathwayInfo[which(pathwayInfo$DISPLAY_NAME %in% y1 & pathwayInfo$DATASOURCE == "reactome"), c("DISPLAY_NAME", "PATHWAY_URI")])
+colnames(y2) <- c("parent", "child", "childUri")
+
+y3 <- rbind(y2, tY[,c(1:2,4)])
+colnames(y3) <- c("parent", "child", "value")
+
+dataTreeDf <- y3
+
+# CONSTRUCT DATA.TREE
+## Convert to data.tree using list structure that can be converted a data.tree
+treeList <- makeTreeList(dataTreeDf)
+b <- as.Node(treeList)
+```
+
+## Test
+```{r}
+t1 <- names(reactomeGmt)
+t2 <- selectedPathway
+
+maxValue <- length(t1)
+maxIdx <- NA
+max <- 0
+
+pb <- txtProgressBar(min=1, max=maxValue, style=3)
+
+allComparisons <- data.frame(name=character(0), jaccard=numeric(0))
+
+names(lovGmt) <- smNames
+for(i in 1:length(t1)) {
+  setTxtProgressBar(pb, i)
+  
+  for(j in 1:length(t2)) {
+    t3 <- calcJaccard(reactomeGmt[[t1[i]]], lovGmt[[t2[j]]])
+
+    if(t3 > 0) {
+      allComparisons <- rbind(allComparisons, data.frame(name=t1[i], jaccard=t3))
+      #cat("R: ", i, "K: ", j, "t3: ", t3, "\n")
+    }
+    
+    if(t3 > max) {
+      max <- t3
+      maxIdx <- i
+    }
+  }
+}
+
+max
+reactomeGmt[maxIdx]
+```
+
+```{r}
+q <- "Fanconi Anemia Pathway"
+q <- names(reactomeGmt[maxIdx])
+patt2 <- gsub("([.|()\\^{}+$*?]|\\[|\\])", "\\\\\\1", q)
+
+bDf <- ToDataFrameTable(b, "pathString")
+
+write.table(bDf, "pathStr.txt", row.names = FALSE, col.names = FALSE, quote=FALSE)
+i2 <- which(grepl(patt2, bDf))
+
+tx1 <- bDf[i2]
+tx2 <- strsplit(tx1, "/")
+
+# Total levels
+length(tx2[[1]])-1
+
+maxLevels <- length(tx2[[1]])-1
+tx3 <- NULL
+
+for(i in 2:(maxLevels+1)) {
+  tx4 <- tx2[[1]][i]
+  tx3 <- c(tx3, tx4)
+}
+
+q
+tx3
+```

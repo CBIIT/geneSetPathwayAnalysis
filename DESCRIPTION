@@ -1,0 +1,17 @@
+Package: geneSetPathwayAnalysis
+Title: geneSetPathwayAnalysis
+Version: 0.99
+Date: 2016-09-01
+Author: Augustin Luna, Vinodh Rajapakse
+Maintainer: Augustin Luna <lunaa@cbio.mskcc.org>, Vinodh Rajapakse <vinodh.rajapakse@nih.gov>
+Description: A collection of data files and utility functions for performing gene set/pathway-based analyses.
+License: LGPL-3 + file LICENSE
+Depends:
+    R (>= 3.1.1)
+Suggests:
+    knitr,
+    testthat,
+    rcellminer (>= 2.0.0)
+LazyData: true
+VignetteBuilder: knitr
+RoxygenNote: 5.0.1

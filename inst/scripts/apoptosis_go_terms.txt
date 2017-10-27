@@ -1,0 +1,7 @@
+go_child_term	go_child_term_name	ontology
+GO:0043065	positive regulation of apoptotic process	BP
+GO:0043066	negative regulation of apoptotic process	BP
+GO:0008284	positive regulation of cell proliferation	BP
+GO:0008285	negative regulation of cell proliferation	BP
+GO:0051781	positive regulation of cell division	BP
+GO:0051782	negative regulation of cell division	BP

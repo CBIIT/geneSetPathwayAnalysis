@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "library(rcellminerUtils)\nlibrary(geneSetPathwayAnalysis)\nlibrary(GO.db)\n\n#goTermsPath <- file.path(.lmp, \"geneSetPathwayAnalysis\", \"inst\", \"extdata\", \"archive\", \"data\", \"all_go_slim_generic.txt\")\ngoTermsPath <- file.path(\"inst/scripts/apoptosis_go_terms.txt\")\nselectedGoTerms <- read.table(goTermsPath, header=TRUE, sep=\"\\t\", stringsAsFactors=FALSE)\n#selectedGoTerms <- selectedGoTerms[1:2,]\n#selectedGoTerms <- selectedGoTerms[which(selectedGoTerms$ontology == \"BP\"), ]\n#goIdx <- which(!(selectedGoTerms$go_child_term_name %in% c(\"molecular_function\", \"protein binding\")))\n#selectedGoTerms <- selectedGoTerms[goIdx,]\n\nsymbols <- geneSets[[\"All Gene Sets\"]]\n#symbols <- \"BAX\"\n\n#goResultsNames <- getGoCnts(symbols, selectedGoTerms, returnType=\"list\", useNames=TRUE)\n#goResultsTerms <- getGoCnts(symbols, selectedGoTerms, returnType=\"list\", useNames=FALSE)\n\ndat <- select(org.Hs.eg.db, keys=symbols, columns=c(\"SYMBOL\", \"GO\"), keytype=\"SYMBOL\")\nt2 <- dat[dat$GO %in% selectedGoTerms$go_child_term,]\n\ngoids <- dat$GO\ndat2 <- select(GO.db, keys=goids, columns=c(\"GOID\", \"TERM\"), keytype=\"GOID\")\nt3 <- unique(dat2)\n\nt4 <- merge(t2, t3, by.x=\"GO\", by.y=\"GOID\")\nt5 <- t4[, c(\"GO\", \"SYMBOL\", \"ONTOLOGY\", \"TERM\")]\nt6 <- unique(t5)\n\na <- t6[which(t6$TERM == \"negative regulation of apoptotic process\"), \"SYMBOL\"]\nb <- t6[which(t6$TERM == \"positive regulation of apoptotic process\"), \"SYMBOL\"]\nc <- t6[which(t6$TERM == \"positive regulation of cell division\"), \"SYMBOL\"]\nd <- t6[which(t6$TERM == \"negative regulation of cell division\"), \"SYMBOL\"]\n\nlength(a)\nlength(b)\nlength(c)\nlength(d)\n\n#saveRDS(goResultsNames, file=goResultsNamesFilename)\n#saveRDS(goResultsTerms, file=goResultsTermsFilename)\n\n\n",
+    "created" : 1484678694766.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4159872718",
+    "id" : "72961662",
+    "lastKnownWriteTime" : 1484680535,
+    "last_content_update" : 1484680535497,
+    "path" : "~/lmpNci/geneSetPathwayAnalysis/inst/scripts/splitGeneSets.R",
+    "project_path" : "inst/scripts/splitGeneSets.R",
+    "properties" : {
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
