@@ -11,10 +11,12 @@ makeTreeList(df, root = df[1, 1])
 
 \item{root}{the entry in the data.frame that serves at the tree root node}
 }
+\value{
+a list
+}
 \description{
 Make a Tree List
 }
 \concept{
 geneSetPathwayAnalysis
 }
-

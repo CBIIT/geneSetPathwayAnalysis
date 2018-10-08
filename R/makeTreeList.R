@@ -3,7 +3,7 @@
 #' @param df a data.frame
 #' @param root the entry in the data.frame that serves at the tree root node
 #'
-#' @results a tmp
+#' @return a list
 #'
 #' @concept geneSetPathwayAnalysis
 #' @export
