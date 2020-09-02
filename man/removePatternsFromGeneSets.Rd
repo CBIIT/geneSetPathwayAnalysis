@@ -24,7 +24,4 @@ tmp <- list(a=c("abc", "def", "deg", "ghi"), b=c("def", "deg", "ijk"))
 removePatternsFromGeneSets(tmp, "def", TRUE)
 
 }
-\concept{
-geneSetPathwayAnalysis
-}
-
+\concept{geneSetPathwayAnalysis}

@@ -17,6 +17,4 @@ a list
 \description{
 Make a Tree List
 }
-\concept{
-geneSetPathwayAnalysis
-}
+\concept{geneSetPathwayAnalysis}

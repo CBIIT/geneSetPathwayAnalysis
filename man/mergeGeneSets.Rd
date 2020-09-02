@@ -4,8 +4,13 @@
 \alias{mergeGeneSets}
 \title{Merge Gene Sets}
 \usage{
-mergeGeneSets(geneSets, name = "merged", idConversion = FALSE,
-  returnCounts = FALSE, forceCache = FALSE)
+mergeGeneSets(
+  geneSets,
+  name = "merged",
+  idConversion = FALSE,
+  returnCounts = FALSE,
+  forceCache = FALSE
+)
 }
 \arguments{
 \item{geneSets}{a list of vectors (e.g. gene sets)}
@@ -28,7 +33,4 @@ tmp <- list(a=c("abc", "def", "deg", "ghi"), b=c("def", "deg", "ijk"))
 mergeGeneSets(tmp, "y")
 
 }
-\concept{
-geneSetPathwayAnalysis
-}
-
+\concept{geneSetPathwayAnalysis}
