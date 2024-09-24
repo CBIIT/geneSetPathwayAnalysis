@@ -1,7 +1,7 @@
 Package: geneSetPathwayAnalysis
 Title: geneSetPathwayAnalysis
-Version: 0.99.3
-Date: 2022-04-15
+Version: 0.99.4
+Date: 2023-01-31
 Author: Augustin Luna, Vinodh Rajapakse
 Maintainer: Augustin Luna <lunaa@cbio.mskcc.org>, Vinodh Rajapakse <vinodh.rajapakse@nih.gov>, Fathi Elloumi <fathi.elloumi@nih.gov>
 Description: A collection of data files and utility functions for performing gene set/pathway-based analyses.
